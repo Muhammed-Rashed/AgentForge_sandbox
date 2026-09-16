@@ -5,45 +5,66 @@ export default function LoginForm({ onLogin }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+
     if (!email || !password) {
-      setError('Please fill in all fields');
+      setError('Please fill in all fields.');
       return;
     }
-    setError('');
-    if (onLogin) {
-      onLogin({ email, password });
+
+    setLoading(true);
+    try {
+      if (onLogin) {
+        await onLogin({ email, password });
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to login. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="login-container">
       <form className="login-form" onSubmit={handleSubmit}>
-        <h2>Login</h2>
-        {error && <div className="error-message">{error}</div>}
+        <h2>Welcome Back</h2>
+        <p className="login-subtitle">Please enter your details to sign in.</p>
+
+        {error && <div className="login-error" role="alert">{error}</div>}
+
         <div className="form-group">
           <label htmlFor="email">Email</label>
           <input
-            type="email"
             id="email"
+            type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="Enter your email"
+            disabled={loading}
+            required
           />
         </div>
+
         <div className="form-group">
           <label htmlFor="password">Password</label>
           <input
-            type="password"
             id="password"
+            type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Enter your password"
+            placeholder="••••••••"
+            disabled={loading}
+            required
           />
         </div>
-        <button type="submit" className="submit-btn">Sign In</button>
+
+        <button type="submit" className="login-button" disabled={loading}>
+          {loading ? 'Signing in...' : 'Sign In'}
+        </button>
       </form>
     </div>
   );
