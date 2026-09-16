@@ -3,72 +3,89 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: #f5f6fa;
+  background-color: #f4f6f8;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
 }
 
 .login-form {
   background: #ffffff;
-  padding: 40px;
+  padding: 2.5rem;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   width: 100%;
   max-width: 400px;
+  box-sizing: border-box;
 }
 
 .login-form h2 {
-  margin-bottom: 24px;
-  color: #2f3640;
-  text-align: center;
+  margin-bottom: 0.5rem;
+  color: #111827;
+  font-size: 1.75rem;
+}
+
+.login-subtitle {
+  color: #6b7280;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+
+.login-error {
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  margin-bottom: 1.25rem;
 }
 
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
-  color: #718093;
+  margin-bottom: 0.5rem;
+  color: #374151;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
 .form-group input {
   width: 100%;
-  padding: 10px 14px;
-  border: 1px solid #dcdde1;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
   border-radius: 4px;
-  font-size: 16px;
-  outline: none;
+  font-size: 1rem;
+  box-sizing: border-box;
   transition: border-color 0.2s;
 }
 
 .form-group input:focus {
-  border-color: #40739e;
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-.error-message {
-  background-color: #ff76757f;
-  color: #c0392b;
-  padding: 10px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-  font-size: 14px;
-  text-align: center;
-}
-
-.submit-btn {
+.login-button {
   width: 100%;
-  padding: 12px;
-  background-color: #40739e;
+  padding: 0.75rem;
+  background-color: #2563eb;
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 1rem;
+  font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  margin-top: 0.5rem;
 }
 
-.submit-btn:hover {
-  background-color: #2f3640;
+.login-button:hover:not(:disabled) {
+  background-color: #1d4ed8;
+}
+
+.login-button:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
 }
