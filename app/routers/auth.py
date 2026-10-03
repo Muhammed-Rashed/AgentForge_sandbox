@@ -1,35 +1,35 @@
 from fastapi import APIRouter, HTTPException, status
-from app.schemas import LoginRequest, TokenResponse
-from app.auth import MOCK_USERS_DB, verify_password, create_access_token
+from app.schemas.auth import LoginRequest, Token
+from app.core.security import verify_password, create_access_token, get_password_hash
 
-router = APIRouter(prefix="/api", tags=["Auth"])
+router = APIRouter(prefix="/api", tags=["auth"])
 
-@router.post("/login", response_model=TokenResponse)
-def login(request: LoginRequest):
-    username_or_email = request.username or request.email
-    if not username_or_email:
+# Mock demo user for standard verification; in production this delegates to DB models
+DEMO_USER = {
+    "id": "1",
+    "username": "admin",
+    "email": "admin@example.com",
+    "hashed_password": get_password_hash("password123")
+}
+
+@router.post("/login", response_model=Token)
+async def login(credentials: LoginRequest):
+    identifier = credentials.username or credentials.email
+    if not identifier:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username or email must be provided"
         )
 
-    user = None
-    for u in MOCK_USERS_DB.values():
-        if u["username"] == username_or_email or u["email"] == username_or_email:
-            user = u
-            break
-
-    if not user or not verify_password(request.password, user["password_hash"]):
+    is_valid_user = (identifier == DEMO_USER["username"] or identifier == DEMO_USER["email"])
+    if not is_valid_user or not verify_password(credentials.password, DEMO_USER["hashed_password"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
+            detail="Incorrect username/email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token = create_access_token(data={"sub": user["user_id"], "username": user["username"]})
-    return TokenResponse(
-        access_token=access_token,
-        token_type="bearer",
-        user_id=user["user_id"],
-        username=user["username"]
+    access_token = create_access_token(
+        data={"sub": DEMO_USER["username"], "user_id": DEMO_USER["id"]}
     )
+    return Token(access_token=access_token, token_type="bearer")
