@@ -1,85 +1,46 @@
-import os
-from datetime import datetime, timedelta, timezone
-from typing import Optional
-import bcrypt
-import jwt
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
+from app.core.config import settings
+from app.core.security import create_access_token, get_password_hash, verify_password
+from app.schemas.auth import LoginRequest, TokenResponse, UserResponse
 
 router = APIRouter(prefix="/api", tags=["auth"])
 
-SECRET_KEY = os.getenv("SECRET_KEY", "default_secret_key_change_in_production")
-ALGORITHM = os.getenv("ALGORITHM", "HS256")
-ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
-
-DEFAULT_USERNAME = os.getenv("AUTH_USERNAME", os.getenv("DEFAULT_USERNAME", "admin"))
-DEFAULT_EMAIL = os.getenv("AUTH_EMAIL", "admin@example.com")
-_ENV_PASSWORD = os.getenv("AUTH_PASSWORD", os.getenv("ADMIN_PASSWORD", "admin123"))
-_ENV_PASSWORD_HASH = os.getenv("AUTH_PASSWORD_HASH", "")
-
-if _ENV_PASSWORD_HASH:
-    DEFAULT_PASSWORD_HASH = _ENV_PASSWORD_HASH
-else:
-    DEFAULT_PASSWORD_HASH = bcrypt.hashpw(_ENV_PASSWORD.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+# ponytail: in-memory user registry backed by environment variables for lightweight auth
+_admin_hash = get_password_hash(settings.ADMIN_PASSWORD)
+DEMO_USERS = {
+    settings.ADMIN_USERNAME.lower(): {
+        "username": settings.ADMIN_USERNAME,
+        "email": settings.ADMIN_EMAIL,
+        "password_hash": _admin_hash,
+    }
+}
+if settings.ADMIN_EMAIL:
+    DEMO_USERS[settings.ADMIN_EMAIL.lower()] = DEMO_USERS[settings.ADMIN_USERNAME.lower()]
 
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    try:
-        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
-    except Exception:
-        return False
-
-
-def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    to_encode = data.copy()
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
-class LoginRequest(BaseModel):
-    username: Optional[str] = None
-    email: Optional[str] = None
-    password: str
-
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str = "bearer"
-    username: Optional[str] = None
-
-
-@router.post("/login", response_model=Token)
-def login(request: LoginRequest):
-    identifier = request.username or request.email
-    if not identifier:
+@router.post("/login", response_model=TokenResponse)
+def login(payload: LoginRequest):
+    identifier = (payload.username or payload.email or "").strip().lower()
+    if not identifier or not payload.password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username or email is required",
+            detail="Username or email and password are required",
         )
 
-    is_valid_user = (
-        (request.username and request.username.lower() == DEFAULT_USERNAME.lower())
-        or (request.email and request.email.lower() == DEFAULT_EMAIL.lower())
-        or (identifier.lower() == DEFAULT_USERNAME.lower())
-        or (identifier.lower() == DEFAULT_EMAIL.lower())
-    )
-
-    if not is_valid_user or not verify_password(request.password, DEFAULT_PASSWORD_HASH):
+    user = DEMO_USERS.get(identifier)
+    if not user or not verify_password(payload.password, user["password_hash"]):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username/email or password",
+            detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token_data = {"sub": DEFAULT_USERNAME, "email": DEFAULT_EMAIL}
-    access_token = create_access_token(data=token_data)
-
-    return Token(
+    access_token = create_access_token(subject=user["username"])
+    return TokenResponse(
         access_token=access_token,
         token_type="bearer",
-        username=DEFAULT_USERNAME,
+        user=UserResponse(
+            username=user["username"],
+            email=user["email"],
+        ),
     )
