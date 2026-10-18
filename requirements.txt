@@ -1,6 +1,5 @@
-fastapi
-uvicorn[standard]
-pydantic
-pyjwt
-bcrypt
-python-dotenv
+fastapi>=0.110.0
+uvicorn>=0.28.0
+pydantic>=2.0.0
+pyjwt>=2.8.0
+bcrypt>=4.0.0
