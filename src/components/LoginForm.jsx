@@ -20,20 +20,20 @@ export default function LoginForm({ onLoginSuccess }) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.detail || 'Login failed');
       }
-      const user = await response.json();
-      onLoginSuccess(user);
+      const userData = await response.json();
+      onLoginSuccess(userData);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'An error occurred');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif' }}>
-      <form onSubmit={handleSubmit} style={{ padding: '2rem', border: '1px solid #ccc', borderRadius: '8px', width: '300px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-        <h2>Login</h2>
-        {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif', backgroundColor: '#f5f5f5' }}>
+      <form onSubmit={handleSubmit} style={{ background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
+        <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Login</h2>
+        {error && <div style={{ color: 'red', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>}
         <div style={{ marginBottom: '1rem' }}>
           <label style={{ display: 'block', marginBottom: '0.5rem' }}>Username</label>
           <input
@@ -41,32 +41,23 @@ export default function LoginForm({ onLoginSuccess }) {
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             required
-            style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box', border: '1px solid #ccc', borderRadius: '4px' }}
           />
         </div>
-        <div style={{ marginBottom: '1rem' }}>
+        <div style={{ marginBottom: '1.5rem' }}>
           <label style={{ display: 'block', marginBottom: '0.5rem' }}>Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }}
+            style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box', border: '1px solid #ccc', borderRadius: '4px' }}
           />
         </div>
         <button
           type="submit"
           disabled={loading}
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            backgroundColor: 'red',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontWeight: 'bold',
-            cursor: loading ? 'not-allowed' : 'pointer'
-          }}
+          style={{ width: '100%', padding: '0.75rem', backgroundColor: 'red', color: 'white', border: 'none', borderRadius: '4px', fontSize: '1rem', cursor: 'pointer' }}
         >
           {loading ? 'Logging in...' : 'Login'}
         </button>
