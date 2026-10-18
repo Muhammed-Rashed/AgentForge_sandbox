@@ -23,7 +23,7 @@ export default function LoginForm({ onLoginSuccess }) {
       const userData = await response.json();
       onLoginSuccess(userData);
     } catch (err) {
-      setError(err.message || 'An error occurred');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -31,11 +31,11 @@ export default function LoginForm({ onLoginSuccess }) {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif', backgroundColor: '#f5f5f5' }}>
-      <form onSubmit={handleSubmit} style={{ background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '100%', maxWidth: '400px' }}>
-        <h2 style={{ marginBottom: '1.5rem', textAlign: 'center' }}>Login</h2>
-        {error && <div style={{ color: 'red', marginBottom: '1rem', textAlign: 'center' }}>{error}</div>}
+      <form onSubmit={handleSubmit} style={{ background: 'white', padding: '2rem', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '300px' }}>
+        <h2 style={{ marginBottom: '1.5rem', textAlign: 'center', color: '#333' }}>Login</h2>
+        {error && <div style={{ color: 'red', marginBottom: '1rem', fontSize: '0.875rem' }}>{error}</div>}
         <div style={{ marginBottom: '1rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem' }}>Username</label>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#555' }}>Username</label>
           <input
             type="text"
             value={username}
@@ -45,7 +45,7 @@ export default function LoginForm({ onLoginSuccess }) {
           />
         </div>
         <div style={{ marginBottom: '1.5rem' }}>
-          <label style={{ display: 'block', marginBottom: '0.5rem' }}>Password</label>
+          <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: '#555' }}>Password</label>
           <input
             type="password"
             value={password}
@@ -57,7 +57,7 @@ export default function LoginForm({ onLoginSuccess }) {
         <button
           type="submit"
           disabled={loading}
-          style={{ width: '100%', padding: '0.75rem', backgroundColor: 'red', color: 'white', border: 'none', borderRadius: '4px', fontSize: '1rem', cursor: 'pointer' }}
+          style={{ width: '100%', padding: '0.75rem', backgroundColor: 'red', color: 'white', border: 'none', borderRadius: '4px', fontWeight: 'bold', cursor: 'pointer' }}
         >
           {loading ? 'Logging in...' : 'Login'}
         </button>
