@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import auth
 
-app = FastAPI(title="Backend API")
+app = FastAPI(title="Auth API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -12,9 +12,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router)
+app.include_router(auth.router, prefix="/api", tags=["auth"])
 
 
 @app.get("/")
 def read_root():
-    return {"message": "API status: OK"}
+    return {"status": "ok", "message": "Auth API service active"}
+
+
+@app.get("/health")
+def health_check() -> dict[str, str]:
+    return {"status": "ok"}
