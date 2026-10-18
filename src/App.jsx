@@ -1,13 +1,15 @@
 
-		import { useState } from 'react';
-import LoginForm from './LoginForm';
-import HomePage from './HomePage';
+		import React, { useState } from 'react';
+import LoginForm from './components/LoginForm';
+import HomePage from './components/HomePage';
 
 export default function App() {
-			const [isLoggedIn, setIsLoggedIn] = useState(false);
-			if (!isLoggedIn) {
-				return <LoginForm onLogin={() => setIsLoggedIn(true)} />;
-			}
-			return <HomePage onLogout={() => setIsLoggedIn(false)} />;
-		}
+  const [user, setUser] = useState(null);
+
+  if (!user) {
+    return <LoginForm onLoginSuccess={(userData) => setUser(userData || {})} />;
+  }
+
+  return <HomePage user={user} onLogout={() => setUser(null)} />;
+}
 	
