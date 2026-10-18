@@ -1,46 +1,116 @@
-from fastapi import APIRouter, HTTPException, status
-from app.core.config import settings
-from app.core.security import create_access_token, get_password_hash, verify_password
-from app.schemas.auth import LoginRequest, TokenResponse, UserResponse
+import os
+import time
+from typing import Annotated
 
-router = APIRouter(prefix="/api", tags=["auth"])
+import bcrypt
+import jwt
+from fastapi import APIRouter, Depends, HTTPException, Header, status
+from pydantic import BaseModel
 
-# ponytail: in-memory user registry backed by environment variables for lightweight auth
-_admin_hash = get_password_hash(settings.ADMIN_PASSWORD)
-DEMO_USERS = {
-    settings.ADMIN_USERNAME.lower(): {
-        "username": settings.ADMIN_USERNAME,
-        "email": settings.ADMIN_EMAIL,
-        "password_hash": _admin_hash,
+router = APIRouter()
+
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_SECONDS = 86400
+
+
+def get_secret_key() -> str:
+    return os.getenv("JWT_SECRET", "dev-secret-key-change-in-production")
+
+
+def get_admin_username() -> str:
+    return os.getenv("AUTH_USERNAME", "admin")
+
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    username: str
+
+
+class UserResponse(BaseModel):
+    username: str
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    try:
+        return bcrypt.checkpw(plain_password.encode("utf-8"), hashed_password.encode("utf-8"))
+    except Exception:
+        return False
+
+
+def create_access_token(username: str) -> str:
+    payload = {
+        "sub": username,
+        "exp": time.time() + ACCESS_TOKEN_EXPIRE_SECONDS,
     }
-}
-if settings.ADMIN_EMAIL:
-    DEMO_USERS[settings.ADMIN_EMAIL.lower()] = DEMO_USERS[settings.ADMIN_USERNAME.lower()]
+    return jwt.encode(payload, get_secret_key(), algorithm=ALGORITHM)
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest):
-    identifier = (payload.username or payload.email or "").strip().lower()
-    if not identifier or not payload.password:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username or email and password are required",
-        )
+def login(credentials: LoginRequest) -> TokenResponse:
+    expected_username = get_admin_username()
 
-    user = DEMO_USERS.get(identifier)
-    if not user or not verify_password(payload.password, user["password_hash"]):
+    if credentials.username != expected_username:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
         )
 
-    access_token = create_access_token(subject=user["username"])
+    env_password = os.getenv("AUTH_PASSWORD")
+    env_hash = os.getenv("AUTH_PASSWORD_HASH")
+
+    if env_hash:
+        valid = verify_password(credentials.password, env_hash)
+    elif env_password:
+        valid = (credentials.password == env_password)
+    else:
+        valid = (credentials.password == "admin123")
+
+    if not valid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+        )
+
+    token = create_access_token(credentials.username)
     return TokenResponse(
-        access_token=access_token,
+        access_token=token,
         token_type="bearer",
-        user=UserResponse(
-            username=user["username"],
-            email=user["email"],
-        ),
+        username=credentials.username,
     )
+
+
+def get_current_user(authorization: Annotated[str | None, Header()] = None) -> str:
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing or invalid token",
+        )
+    token = authorization.split(" ", 1)[1]
+    try:
+        payload = jwt.decode(token, get_secret_key(), algorithms=[ALGORITHM])
+        username: str | None = payload.get("sub")
+        if not username:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token payload",
+            )
+        return username
+    except jwt.PyJWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )
+
+
+CurrentUserDep = Annotated[str, Depends(get_current_user)]
+
+
+@router.get("/me", response_model=UserResponse)
+def get_me(current_user: CurrentUserDep) -> UserResponse:
+    return UserResponse(username=current_user)
