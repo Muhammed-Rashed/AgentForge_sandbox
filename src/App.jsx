@@ -1,13 +1,25 @@
 
-		import { useState } from 'react';
-import LoginForm from './LoginForm';
-import HomePage from './HomePage';
+		import React, { useState, useEffect } from 'react';
+import LoginForm from './components/LoginForm';
+import HomePage from './components/HomePage';
 
 export default function App() {
-			const [isLoggedIn, setIsLoggedIn] = useState(false);
-			if (!isLoggedIn) {
-				return <LoginForm onLogin={() => setIsLoggedIn(true)} />;
-			}
-			return <HomePage onLogout={() => setIsLoggedIn(false)} />;
-		}
+  const [user, setUser] = useState(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
+
+  useEffect(() => {
+    // Check session or handle expired session check if applicable
+    setSessionChecked(true);
+  }, []);
+
+  if (!sessionChecked) {
+    return null;
+  }
+
+  if (!user) {
+    return <LoginForm onLoginSuccess={(userData) => setUser(userData || {})} />;
+  }
+
+  return <HomePage user={user} onLogout={() => setUser(null)} />;
+}
 	
