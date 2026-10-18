@@ -16,16 +16,14 @@ export default function LoginForm({ onLoginSuccess }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
-
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.detail || 'Login failed');
       }
-
-      const userData = await response.json();
-      onLoginSuccess(userData);
+      const user = await response.json();
+      onLoginSuccess(user);
     } catch (err) {
-      setError(err.message || 'An error occurred during login');
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -35,7 +33,7 @@ export default function LoginForm({ onLoginSuccess }) {
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', fontFamily: 'sans-serif' }}>
       <form onSubmit={handleSubmit} style={{ padding: '2rem', border: '1px solid #ccc', borderRadius: '8px', width: '300px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
         <h2>Login</h2>
-        {error && <div style={{ color: 'red', marginBottom: '1rem', fontSize: '0.9rem' }}>{error}</div>}
+        {error && <div style={{ color: 'red', marginBottom: '1rem' }}>{error}</div>}
         <div style={{ marginBottom: '1rem' }}>
           <label style={{ display: 'block', marginBottom: '0.5rem' }}>Username</label>
           <input
@@ -46,7 +44,7 @@ export default function LoginForm({ onLoginSuccess }) {
             style={{ width: '100%', padding: '0.5rem', boxSizing: 'border-box' }}
           />
         </div>
-        <div style={{ marginBottom: '1.5rem' }}>
+        <div style={{ marginBottom: '1rem' }}>
           <label style={{ display: 'block', marginBottom: '0.5rem' }}>Password</label>
           <input
             type="password"
@@ -59,7 +57,16 @@ export default function LoginForm({ onLoginSuccess }) {
         <button
           type="submit"
           disabled={loading}
-          style={{ width: '100%', padding: '0.75rem', backgroundColor: 'red', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            backgroundColor: 'red',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            fontWeight: 'bold',
+            cursor: loading ? 'not-allowed' : 'pointer'
+          }}
         >
           {loading ? 'Logging in...' : 'Login'}
         </button>
