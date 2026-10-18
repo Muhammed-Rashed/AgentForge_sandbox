@@ -16,14 +16,16 @@ export default function LoginForm({ onLoginSuccess }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
       });
+
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
         throw new Error(data.detail || 'Login failed');
       }
+
       const userData = await response.json();
       onLoginSuccess(userData);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'An error occurred during login');
     } finally {
       setLoading(false);
     }
@@ -57,16 +59,7 @@ export default function LoginForm({ onLoginSuccess }) {
         <button
           type="submit"
           disabled={loading}
-          style={{
-            width: '100%',
-            padding: '0.75rem',
-            backgroundColor: 'red',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            fontWeight: 'bold',
-            cursor: 'pointer'
-          }}
+          style={{ width: '100%', padding: '0.75rem', backgroundColor: 'red', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
         >
           {loading ? 'Logging in...' : 'Login'}
         </button>
