@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
 
 jobs:
   test:
@@ -14,7 +14,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
@@ -24,4 +24,6 @@ jobs:
 
       - name: Run tests with pytest
         run: |
-          pytest
+          # Exit code 5 = "no tests collected". Treat as pass until agents write tests.
+          # Real test failures (exit code 1) still fail the job.
+          pytest || [ $? -eq 5 ]
