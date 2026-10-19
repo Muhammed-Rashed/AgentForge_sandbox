@@ -15,27 +15,25 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
-def get_jwt_secret() -> str:
-    secret = os.getenv("JWT_SECRET")
-    if not secret:
-        raise RuntimeError("JWT_SECRET environment variable not set")
-    return secret
+def get_secret_key() -> str:
+    key = os.getenv("JWT_SECRET_KEY")
+    if not key:
+        raise RuntimeError("JWT_SECRET_KEY environment variable not set")
+    return key
 
-# Simple in‑memory user store with bcrypt‑hashed passwords.
-# Replace with a real database in production.
-_user_passwords = {
-    "alice": bcrypt.hashpw(b"alicepassword", bcrypt.gensalt()),
-    "bob": bcrypt.hashpw(b"bobpassword", bcrypt.gensalt()),
-}
+def get_user_hashed_password(username: str) -> bytes | None:
+    # Expect env var USER_{USERNAME}_HASH containing bcrypt hash
+    env_name = f"USER_{username.upper()}_HASH"
+    hash_str = os.getenv(env_name)
+    return hash_str.encode() if hash_str else None
 
 @router.post("/login", response_model=TokenResponse)
-def login(data: LoginRequest):
-    stored_hash = _user_passwords.get(data.username)
-    if not stored_hash or not bcrypt.checkpw(data.password.encode(), stored_hash):
+def login(request: LoginRequest):
+    hashed = get_user_hashed_password(request.username)
+    if not hashed or not bcrypt.checkpw(request.password.encode(), hashed):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    payload = {
-        "sub": data.username,
-        "exp": datetime.utcnow() + timedelta(hours=1),
-    }
-    token = jwt.encode(payload, get_jwt_secret(), algorithm="HS256")
-    return TokenResponse(access_token=token)
+    secret = get_secret_key()
+    expire = datetime.utcnow() + timedelta(hours=1)
+    payload = {"sub": request.username, "exp": expire}
+    token = jwt.encode(payload, secret, algorithm="HS256")
+    return {"access_token": token}
