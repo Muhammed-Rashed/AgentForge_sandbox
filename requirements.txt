@@ -1,6 +1,0 @@
-fastapi
-uvicorn[standard]
-pydantic
-pyjwt
-bcrypt
-python-dotenv
