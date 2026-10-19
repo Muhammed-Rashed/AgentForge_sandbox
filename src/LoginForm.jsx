@@ -12,11 +12,11 @@ export default function LoginForm({ onLogin }) {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '0 auto', padding: '1rem' }}>
+    <div style={{ maxWidth: '400px', margin: '0 auto', padding: '2rem' }}>
       <h2>Login</h2>
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '0.5rem' }}>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: '0.25rem' }}>
+        <div style={{ marginBottom: '1rem' }}>
+          <label htmlFor="email" style={{ display: 'block', marginBottom: '.5rem' }}>
             Email
           </label>
           <input
@@ -25,11 +25,11 @@ export default function LoginForm({ onLogin }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ width: '100%', padding: '0.5rem' }}
+            style={{ width: '100%', padding: '.5rem' }}
           />
         </div>
-        <div style={{ marginBottom: '0.5rem' }}>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: '0.25rem' }}>
+        <div style={{ marginBottom: '1rem' }}>
+          <label htmlFor="password" style={{ display: 'block', marginBottom: '.5rem' }}>
             Password
           </label>
           <input
@@ -38,10 +38,10 @@ export default function LoginForm({ onLogin }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{ width: '100%', padding: '0.5rem' }}
+            style={{ width: '100%', padding: '.5rem' }}
           />
         </div>
-        <button type="submit" style={{ padding: '0.5rem 1rem' }}>
+        <button type="submit" style={{ padding: '.5rem 1rem' }}>
           Log In
         </button>
       </form>
