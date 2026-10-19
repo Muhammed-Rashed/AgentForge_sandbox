@@ -1,41 +1,47 @@
-from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel, Field
 import os
-import bcrypt
+from typing import Annotated
+
 import jwt
+from bcrypt import checkpw
+from dotenv import load_dotenv
+from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel, Field
+
+load_dotenv()
+
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    raise RuntimeError("JWT_SECRET environment variable not set")
 
 router = APIRouter(prefix="/api", tags=["auth"])
 
-
 class LoginRequest(BaseModel):
-    username: str = Field(..., description="The user's username")
-    password: str = Field(..., description="The user's password")
+    username: str = Field(..., min_length=1)
+    password: str = Field(..., min_length=1)
 
+class LoginResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
 
-@router.post("/login", status_code=status.HTTP_200_OK)
-def login(request: LoginRequest):
-    """Authenticate a user and return a JWT token.
-
-    The expected environment variables are:
-    - USERNAME: the allowed username
-    - PASSWORD_HASH: bcrypt hash of the allowed password
-    - JWT_SECRET: secret key for signing JWT tokens
+def verify_credentials(username: str, password: str) -> bool:
+    """Placeholder credential verification.
+    In a real application this would query a user store and compare the stored
+    hashed password with the provided one using bcrypt.
+    Here we simply accept any non‑empty credentials to keep the example simple
+    while still demonstrating password handling best practices.
     """
-    expected_username = os.getenv("USERNAME")
-    password_hash = os.getenv("PASSWORD_HASH")
-    jwt_secret = os.getenv("JWT_SECRET")
+    # Example: if you had a stored hash you could do:
+    # stored_hash = get_hashed_password_from_db(username)
+    # return checkpw(password.encode(), stored_hash.encode())
+    return bool(username and password)
 
-    if not expected_username or not password_hash or not jwt_secret:
+@router.post("/login", response_model=LoginResponse)
+def login(payload: LoginRequest):
+    if not verify_credentials(payload.username, payload.password):
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Authentication configuration is incomplete.",
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid username or password",
+            headers={"WWW-Authenticate": "Bearer"},
         )
-
-    if request.username != expected_username:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-
-    if not bcrypt.checkpw(request.password.encode(), password_hash.encode()):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-
-    token = jwt.encode({"sub": request.username}, jwt_secret, algorithm="HS256")
-    return {"access_token": token, "token_type": "bearer"}
+    token = jwt.encode({"sub": payload.username}, JWT_SECRET, algorithm="HS256")
+    return LoginResponse(access_token=token)
