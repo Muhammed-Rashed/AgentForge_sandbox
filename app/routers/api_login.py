@@ -1,11 +1,9 @@
-import os
-import datetime
-from typing import Annotated
-
-import bcrypt
-import jwt
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
+import os
+import bcrypt
+import jwt
+from datetime import datetime, timedelta
 
 router = APIRouter(prefix="/api", tags=["auth"])
 
@@ -15,29 +13,22 @@ class LoginRequest(BaseModel):
     password: str = Field(..., min_length=1)
 
 
-def _get_env(var_name: str) -> str:
-    value = os.getenv(var_name)
-    if not value:
-        raise RuntimeError(f"Environment variable {var_name} is not set")
-    return value
-
-
 @router.post("/login")
-def login(request: LoginRequest) -> dict:
-    # Retrieve expected credentials from environment variables
-    expected_user = _get_env("LOGIN_USERNAME")
-    expected_hash = _get_env("LOGIN_PASSWORD_HASH").encode()
-
-    if request.username != expected_user:
+def login(data: LoginRequest):
+    env_user = os.getenv("APP_USERNAME")
+    env_hash = os.getenv("APP_PASSWORD_HASH")
+    if not env_user or not env_hash:
+        raise HTTPException(status_code=500, detail="Server not configured")
+    if data.username != env_user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-
-    if not bcrypt.checkpw(request.password.encode(), expected_hash):
+    if not bcrypt.checkpw(data.password.encode(), env_hash.encode()):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
-
-    secret = _get_env("JWT_SECRET")
+    secret = os.getenv("JWT_SECRET")
+    if not secret:
+        raise HTTPException(status_code=500, detail="JWT secret not set")
     payload = {
-        "sub": request.username,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1),
+        "sub": data.username,
+        "exp": datetime.utcnow() + timedelta(hours=1),
     }
     token = jwt.encode(payload, secret, algorithm="HS256")
     return {"access_token": token, "token_type": "bearer"}
