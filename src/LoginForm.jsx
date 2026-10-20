@@ -6,34 +6,45 @@ export default function LoginForm({ onLogin }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // In a real app, validate credentials here.
+    // In a real app, you'd validate credentials here.
+    // For this task, simply trigger the login callback.
     onLogin();
   };
 
   return (
-    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', maxWidth: 300, margin: 'auto' }}>
-      <h2>Login</h2>
-      <label>
-        Email:
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-      </label>
-      <label style={{ marginTop: 10 }}>
-        Password:
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-      </label>
-      <button type="submit" style={{ marginTop: 20 }}>
-        Log In
-      </button>
-    </form>
+    <div style={{ maxWidth: '400px', margin: '0 auto', padding: '2rem' }}>
+      <h2 style={{ textAlign: 'center' }}>Login</h2>
+      <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: '1rem' }}>
+          <label htmlFor="email" style={{ display: 'block', marginBottom: '.5rem' }}>
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            style={{ width: '100%', padding: '.5rem' }}
+          />
+        </div>
+        <div style={{ marginBottom: '1rem' }}>
+          <label htmlFor="password" style={{ display: 'block', marginBottom: '.5rem' }}>
+            Password
+          </label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={{ width: '100%', padding: '.5rem' }}
+          />
+        </div>
+        <button type="submit" style={{ width: '100%', padding: '.75rem' }}>
+          Log In
+        </button>
+      </form>
+    </div>
   );
 }
